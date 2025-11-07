@@ -1,0 +1,17 @@
+{
+  "name": "Musicify",
+  "short_name": "Musicify",
+  "description": "A modern music streaming and discovery platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#191414",
+  "theme_color": "#1DB954",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
+
