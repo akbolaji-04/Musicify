@@ -102,6 +102,7 @@ export default function Search() {
             <section>
               <h2 className="text-2xl font-bold mb-4">Tracks</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {/* FIX: Added .filter(Boolean) */}
                 {results.tracks.filter(Boolean).map((track) => (
                   <TrackCard key={track.id} track={track} />
                 ))}
@@ -114,6 +115,7 @@ export default function Search() {
             <section>
               <h2 className="text-2xl font-bold mb-4">Artists</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {/* FIX: Added .filter(Boolean) */}
                 {results.artists.filter(Boolean).map((artist) => (
                   <motion.div
                     key={artist.id}
@@ -143,7 +145,8 @@ export default function Search() {
             <section>
               <h2 className="text-2xl font-bold mb-4">Albums</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {results.albums.map((album) => (
+                {/* FIX: Added .filter(Boolean) */}
+                {results.albums.filter(Boolean).map((album) => (
                   <motion.div
                     key={album.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -175,7 +178,8 @@ export default function Search() {
             <section>
               <h2 className="text-2xl font-bold mb-4">Playlists</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {results.playlists.map((playlist) => (
+                {/* FIX: Added .filter(Boolean) */}
+                {results.playlists.filter(Boolean).map((playlist) => (
                   <motion.div
                     key={playlist.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -193,7 +197,7 @@ export default function Search() {
                       <div className="w-full aspect-square bg-gray-300 dark:bg-gray-700 rounded-lg mb-3"></div>
                     )}
                     <h3 className="font-semibold truncate">{playlist.name}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text.gray-600 dark:text.gray-400">
                       {playlist.tracks?.total || 0} tracks
                     </p>
                   </motion.div>
@@ -219,4 +223,3 @@ export default function Search() {
     </div>
   );
 }
-

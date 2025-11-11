@@ -1,210 +1,222 @@
-import { Server } from 'socket.io';
+import { useState, useEffect } from 'react';
+import { useDebounce } from '../hooks/useDebounce';
+import { useSpotifyAPI } from '../hooks/useSpotifyAPI';
+import SearchBar from '../components/SearchBar';
+import TrackCard from '../components/TrackCard';
+import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 
-/**
- * Initialize Socket.io server
- * @param {Server} httpServer - HTTP server instance
- * @returns {Server} Socket.io server instance
- */
-export function initializeSocket(httpServer) {
-  const io = new Server(httpServer, {
-    cors: {
-      origin: process.env.SPOTIFY_REDIRECT_URI?.split('/auth')[0] || 'http://localhost:5173',
-      methods: ['GET', 'POST'],
-      credentials: true,
-    },
-  });
+export default function Search() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState({ tracks: [], artists: [], albums: [], playlists: [] });
+  const [loading, setLoading] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const debouncedQuery = useDebounce(query, 300);
+  const { search } = useSpotifyAPI();
 
-  // Store active rooms
-  const rooms = new Map();
+  useEffect(() => {
+    if (debouncedQuery.trim()) {
+      performSearch(debouncedQuery, 0);
+    } else {
+      setResults({ tracks: [], artists: [], albums: [], playlists: [] });
+      setOffset(0);
+      setHasMore(false);
+    }
+  }, [debouncedQuery]);
 
-  io.on('connection', (socket) => {
-    console.log(`User connected: ${socket.id}`);
-
-    /**
-     * Join a room
-     */
-    socket.on('join_room', ({ roomId, username }) => {
-      socket.join(roomId);
-
-      // Initialize room if it doesn't exist
-      if (!rooms.has(roomId)) {
-        rooms.set(roomId, {
-          id: roomId,
-          users: [],
-          queue: [],
-          currentTrack: null,
-          votes: new Map(),
-        });
-      }
-
-      const room = rooms.get(roomId);
-      const user = { id: socket.id, username: username || `User ${socket.id.slice(0, 6)}` };
+  const performSearch = async (searchQuery, searchOffset = 0) => {
+    setLoading(true);
+    try {
+      const data = await search(searchQuery, 'track,artist,album,playlist', 20, searchOffset);
       
-      // Add user if not already in room
-      if (!room.users.find(u => u.id === socket.id)) {
-        room.users.push(user);
-      }
-
-      // Notify room of new user
-      io.to(roomId).emit('user_joined', {
-        user,
-        users: room.users,
-      });
-
-      // Send current room state to new user
-      socket.emit('room_state', {
-        users: room.users,
-        queue: room.queue,
-        currentTrack: room.currentTrack,
-      });
-
-      console.log(`User ${socket.id} joined room ${roomId}`);
-    });
-
-    /**
-     * Leave a room
-     */
-    socket.on('leave_room', ({ roomId }) => {
-      socket.leave(roomId);
-
-      const room = rooms.get(roomId);
-      if (room) {
-        room.users = room.users.filter(u => u.id !== socket.id);
-        
-        // Clean up votes from this user
-        room.votes.delete(socket.id);
-
-        // If room is empty, delete it after a delay
-        if (room.users.length === 0) {
-          setTimeout(() => {
-            if (rooms.get(roomId)?.users.length === 0) {
-              rooms.delete(roomId);
-            }
-          }, 60000); // 1 minute delay
-        } else {
-          io.to(roomId).emit('user_left', {
-            userId: socket.id,
-            users: room.users,
-          });
-        }
-      }
-
-      console.log(`User ${socket.id} left room ${roomId}`);
-    });
-
-    /**
-     * Queue a track
-     */
-    socket.on('queue_track', ({ roomId, track }) => {
-      const room = rooms.get(roomId);
-      if (room) {
-        room.queue.push({
-          ...track,
-          addedBy: socket.id,
-          timestamp: Date.now(),
+      if (searchOffset === 0) {
+        setResults({
+          tracks: data.tracks?.items || [],
+          artists: data.artists?.items || [],
+          albums: data.albums?.items || [],
+          playlists: data.playlists?.items || [],
         });
-
-        io.to(roomId).emit('track_queued', {
-          track: room.queue[room.queue.length - 1],
-          queue: room.queue,
-        });
-
-        // If no current track, play the first queued track
-        if (!room.currentTrack && room.queue.length > 0) {
-          room.currentTrack = room.queue.shift();
-          io.to(roomId).emit('track_changed', {
-            track: room.currentTrack,
-            queue: room.queue,
-          });
-        }
+      } else {
+        setResults(prev => ({
+          tracks: [...prev.tracks, ...(data.tracks?.items || [])],
+          artists: [...prev.artists, ...(data.artists?.items || [])],
+          albums: [...prev.albums, ...(data.albums?.items || [])],
+          playlists: [...prev.playlists, ...(data.playlists?.items || [])],
+        }));
       }
-    });
 
-    /**
-     * Vote to skip current track
-     */
-    socket.on('vote_skip', ({ roomId }) => {
-      const room = rooms.get(roomId);
-      if (room && room.currentTrack) {
-        room.votes.set(socket.id, true);
+      setHasMore(
+        (data.tracks?.next || data.artists?.next || data.albums?.next || data.playlists?.next) !== null
+      );
+      setOffset(searchOffset + 20);
+    } catch (error) {
+      console.error('Search error:', error);
+      toast.error('Failed to search. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        const voteCount = room.votes.size;
-        const userCount = room.users.length;
-        const threshold = Math.ceil(userCount / 2); // 50% majority
+  const handleLoadMore = () => {
+    if (!loading && hasMore && debouncedQuery.trim()) {
+      performSearch(debouncedQuery, offset);
+    }
+  };
 
-        io.to(roomId).emit('vote_update', {
-          votes: voteCount,
-          threshold,
-        });
+  const handleSearch = (searchQuery) => {
+    setQuery(searchQuery);
+  };
 
-        if (voteCount >= threshold) {
-          // Skip track
-          room.currentTrack = null;
-          room.votes.clear();
+  const hasResults = results.tracks.length > 0 || results.artists.length > 0 || 
+                     results.albums.length > 0 || results.playlists.length > 0;
 
-          // Play next track if available
-          if (room.queue.length > 0) {
-            room.currentTrack = room.queue.shift();
-          }
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <h1 className="text-3xl font-bold mb-6">Search</h1>
+        <SearchBar onSearch={handleSearch} />
+      </motion.div>
 
-          io.to(roomId).emit('track_skipped', {
-            currentTrack: room.currentTrack,
-            queue: room.queue,
-          });
-        }
-      }
-    });
+      {loading && !hasResults && (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-spotify-green mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Searching...</p>
+        </div>
+      )}
 
-    /**
-     * Update playback state
-     */
-    socket.on('playback_update', ({ roomId, isPlaying, position }) => {
-      socket.to(roomId).emit('playback_sync', {
-        isPlaying,
-        position,
-      });
-    });
+      {!loading && !hasResults && debouncedQuery && (
+        <div className="text-center py-12">
+          <p className="text-gray-600 dark:text-gray-400">No results found</p>
+        </div>
+      )}
 
-    /**
-     * React to current track
-     */
-    socket.on('track_reaction', ({ roomId, reaction }) => {
-      io.to(roomId).emit('reaction_added', {
-        userId: socket.id,
-        reaction,
-      });
-    });
+      {hasResults && (
+        <div className="space-y-12">
+          {/* Tracks */}
+          {results.tracks.length > 0 && (
+            <section>
+              <h2 className="text-2xl font-bold mb-4">Tracks</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {results.tracks.filter(Boolean).map((track) => (
+                  <TrackCard key={track.id} track={track} />
+                ))}
+              </div>
+            </section>
+          )}
 
-    /**
-     * Handle disconnection
-     */
-    socket.on('disconnect', () => {
-      console.log(`User disconnected: ${socket.id}`);
+          {/* Artists */}
+          {results.artists.length > 0 && (
+            <section>
+              <h2 className="text-2xl font-bold mb-4">Artists</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {results.artists.filter(Boolean).map((artist) => (
+                  <motion.div
+                    key={artist.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    whileHover={{ scale: 1.02 }}
+                    className="card text-center"
+                  >
+                    {artist.images?.[0]?.url ? (
+                      <img
+                        src={artist.images[0].url}
+                        alt={artist.name}
+                        className="w-full aspect-square object-cover rounded-full mb-3"
+                      />
+                    ) : (
+                      <div className="w-full aspect-square bg-gray-300 dark:bg-gray-700 rounded-full mb-3"></div>
+                    )}
+                    <h3 className="font-semibold truncate">{artist.name}</h3>
+                  </motion.div>
+                ))}
+              </div>
+            </section>
+          )}
 
-      // Remove user from all rooms
-      for (const [roomId, room] of rooms.entries()) {
-        const userIndex = room.users.findIndex(u => u.id === socket.id);
-        if (userIndex !== -1) {
-          room.users.splice(userIndex, 1);
-          room.votes.delete(socket.id);
+          {/* Albums */}
+          {results.albums.length > 0 && (
+            <section>
+              <h2 className="text-2xl font-bold mb-4">Albums</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {results.albums.map((album) => (
+                  <motion.div
+                    key={album.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    whileHover={{ scale: 1.02 }}
+                    className="card"
+                  >
+                    {album.images?.[0]?.url ? (
+                      <img
+                        src={album.images[0].url}
+                        alt={album.name}
+                        className="w-full aspect-square object-cover rounded-lg mb-3"
+                      />
+                    ) : (
+                      <div className="w-full aspect-square bg-gray-300 dark:bg-gray-700 rounded-lg mb-3"></div>
+                    )}
+                    <h3 className="font-semibold truncate">{album.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                      {album.artists?.map(a => a.name).join(', ')}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </section>
+          )}
 
-          if (room.users.length === 0) {
-            setTimeout(() => {
-              if (rooms.get(roomId)?.users.length === 0) {
-                rooms.delete(roomId);
-              }
-            }, 60000);
-          } else {
-            io.to(roomId).emit('user_left', {
-              userId: socket.id,
-              users: room.users,
-            });
-          }
-        }
-      }
-    });
-  });
+          {/* Playlists */}
+          {results.playlists.length > 0 && (
+            <section>
+              <h2 className="text-2xl font-bold mb-4">Playlists</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {results.playlists.map((playlist) => (
+                  <motion.div
+                    key={playlist.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    whileHover={{ scale: 1.02 }}
+                    className="card"
+                  >
+                    {playlist.images?.[0]?.url ? (
+                      <img
+                        src={playlist.images[0].url}
+                        alt={playlist.name}
+                        className="w-full aspect-square object-cover rounded-lg mb-3"
+                      />
+                    ) : (
+                      <div className="w-full aspect-square bg-gray-300 dark:bg-gray-700 rounded-lg mb-3"></div>
+                    )}
+                    <h3 className="font-semibold truncate">{playlist.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {playlist.tracks?.total || 0} tracks
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </section>
+          )}
 
-  return io;
+          {/* Load More */}
+          {hasMore && (
+            <div className="text-center">
+              <button
+                onClick={handleLoadMore}
+                disabled={loading}
+                className="btn-primary"
+              >
+                {loading ? 'Loading...' : 'Load More'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 

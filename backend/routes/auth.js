@@ -48,6 +48,7 @@ router.get('/login', (req, res) => {
  */
 router.get('/callback', async (req, res) => {
   const { code, state, error } = req.query;
+  // Use FRONTEND_URL for all redirects back to the client
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
   if (error) {
@@ -89,18 +90,17 @@ router.get('/callback', async (req, res) => {
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
+      sameSite: 'none', // This is correct for cross-domain
       maxAge: 60 * 60 * 24 * 365 * 1000, // 1 year
     });
 
-    // Redirect to frontend with access token
-    const frontendUrl = process.env.SPOTIFY_REDIRECT_URI?.split('/auth')[0] || 'http://localhost:5173';
+    // FIX: Redirect to the FRONTEND_URL
     res.redirect(
       `${frontendUrl}/auth/callback?access_token=${access_token}&expires_in=${expires_in}`
     );
   } catch (error) {
     console.error('Token exchange error:', error.response?.data || error.message);
-    const frontendUrl = process.env.SPOTIFY_REDIRECT_URI?.split('/auth')[0] || 'http://localhost:5173';
+    // Use FRONTEND_URL for error redirect
     res.redirect(
       `${frontendUrl}/?error=token_exchange_failed`
     );
@@ -158,4 +158,3 @@ router.post('/logout', (req, res) => {
 });
 
 export default router;
-
