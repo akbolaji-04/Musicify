@@ -56,6 +56,12 @@ const loadData = async () => {
       setRecommendations(recs.tracks || []);
     }
 
+  } catch (error) {
+    console.error('Failed to load data:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (!isAuthenticated) {
     return (
