@@ -26,9 +26,11 @@ export default function Home() {
 
 const loadData = async () => {
   try {
-    // Step 1: Get top tracks and artists first
+    setLoading(true); 
+
+    // Step 1: Get top tracks and artists
     const [tracks, artists] = await Promise.all([
-      getTopItems('tracks', 'medium_term', 10),
+      getTopItems('tracks', 'medium_term', 5),
       getTopItems('artists', 'medium_term', 5),
     ]);
 
@@ -38,23 +40,30 @@ const loadData = async () => {
     setTopTracks(topTracksData);
     setTopArtists(topArtistsData);
 
-    // Step 2: Build seeds from the results
+    // Step 2: Build seed options
     const seedOptions = { limit: 10 };
 
-    // Use the ID of your top track as a seed
     if (topTracksData.length > 0) {
-      seedOptions.seed_tracks = topTracksData[0].id;
+      // Use the ID of your top track as a seed (as an array)
+      seedOptions.seed_tracks = [topTracksData[0].id]; 
     } 
-    // Also use the ID of your top artist as a seed
-    else if (topArtistsData.length > 0) {
-      seedOptions.seed_artists = topArtistsData[0].id;
+
+    if (topArtistsData.length > 0) {
+      // Use the ID of your top artist as a seed (as an array)
+      seedOptions.seed_artists = [topArtistsData[0].id];
     }
 
-    // Step 3: Get recommendations ONLY if we have a seed
-    if (seedOptions.seed_tracks || seedOptions.seed_artists) {
-      const recs = await getRecommendations(seedOptions);
-      setRecommendations(recs.tracks || []);
+    // Step 3: THIS IS THE FIX
+    // If no history, use default genre seeds
+    if (topTracksData.length === 0 && topArtistsData.length === 0) {
+      // Since you're in Nigeria, let's add afrobeats
+      seedOptions.seed_genres = ['pop', 'afrobeats', 'hip-hop'];
     }
+
+    // Step 4: Get recommendations
+    // This will now always have a valid seed
+    const recs = await getRecommendations(seedOptions);
+    setRecommendations(recs.tracks || []);
 
   } catch (error) {
     console.error('Failed to load data:', error);
