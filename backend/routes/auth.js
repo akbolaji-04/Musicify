@@ -89,7 +89,7 @@ router.get('/callback', async (req, res) => {
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'none',
       maxAge: 60 * 60 * 24 * 365 * 1000, // 1 year
     });
 
