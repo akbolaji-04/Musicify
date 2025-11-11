@@ -97,7 +97,7 @@ export default function Home() {
             <h2 className="text-2xl font-bold">Your Top Tracks</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {topTracks.map((track) => (
+            {topTracks.filter(Boolean).map((track) => (
               <TrackCard key={track.id} track={track} />
             ))}
           </div>
@@ -112,7 +112,7 @@ export default function Home() {
             <h2 className="text-2xl font-bold">Recommended for You</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {recommendations.map((track) => (
+            {recommendations.filter(Boolean).map((track) => (
               <TrackCard key={track.id} track={track} />
             ))}
           </div>
@@ -127,7 +127,7 @@ export default function Home() {
             <h2 className="text-2xl font-bold">Your Top Artists</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {topArtists.map((artist) => (
+            {topArtists.filter(Boolean).map((artist) => (
               <motion.div
                 key={artist.id}
                 initial={{ opacity: 0, y: 20 }}

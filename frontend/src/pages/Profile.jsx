@@ -194,7 +194,7 @@ export default function Profile() {
         <div className="card mb-8">
           <h2 className="text-xl font-bold mb-4">Your Top Tracks</h2>
           <div className="space-y-2">
-            {topTracks.slice(0, 20).map((track, index) => (
+            {topTracks.filter(Boolean).slice(0, 20).map((track, index) => (
               <div
                 key={track.id}
                 className="flex items-center gap-4 p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"

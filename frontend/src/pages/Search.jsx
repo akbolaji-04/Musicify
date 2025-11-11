@@ -102,7 +102,7 @@ export default function Search() {
             <section>
               <h2 className="text-2xl font-bold mb-4">Tracks</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {results.tracks.map((track) => (
+                {results.tracks.filter(Boolean).map((track) => (
                   <TrackCard key={track.id} track={track} />
                 ))}
               </div>
@@ -114,7 +114,7 @@ export default function Search() {
             <section>
               <h2 className="text-2xl font-bold mb-4">Artists</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {results.artists.map((artist) => (
+                {results.artists.filter(Boolean).map((artist) => (
                   <motion.div
                     key={artist.id}
                     initial={{ opacity: 0, y: 20 }}
