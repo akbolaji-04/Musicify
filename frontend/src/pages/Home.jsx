@@ -24,23 +24,44 @@ export default function Home() {
     }
   }, [isAuthenticated]);
 
-  const loadData = async () => {
-    try {
-      const [tracks, artists, recs] = await Promise.all([
-        getTopItems('tracks', 'medium_term', 10),
-        getTopItems('artists', 'medium_term', 10),
-        getRecommendations({ limit: 10 }),
-      ]);
+const loadData = async () => {
+  try {
+    // Step 1: Get top tracks and artists first
+    const [tracks, artists] = await Promise.all([
+      getTopItems('tracks', 'medium_term', 10),
+      getTopItems('artists', 'medium_term', 5),
+    ]);
 
-      setTopTracks(tracks.items || []);
-      setTopArtists(artists.items || []);
-      setRecommendations(recs.tracks || []);
-    } catch (error) {
-      console.error('Failed to load data:', error);
-    } finally {
-      setLoading(false);
+    const topTracksData = tracks.items || [];
+    const topArtistsData = artists.items || [];
+
+    setTopTracks(topTracksData);
+    setTopArtists(topArtistsData);
+
+    // Step 2: Build seeds from the results
+    const seedOptions = { limit: 10 };
+
+    // Use the ID of your top track as a seed
+    if (topTracksData.length > 0) {
+      seedOptions.seed_tracks = topTracksData[0].id;
+    } 
+    // Also use the ID of your top artist as a seed
+    else if (topArtistsData.length > 0) {
+      seedOptions.seed_artists = topArtistsData[0].id;
     }
-  };
+
+    // Step 3: Get recommendations ONLY if we have a seed
+    if (seedOptions.seed_tracks || seedOptions.seed_artists) {
+      const recs = await getRecommendations(seedOptions);
+      setRecommendations(recs.tracks || []);
+    }
+
+  } catch (error) {
+    console.error('Failed to load data:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (!isAuthenticated) {
     return (
