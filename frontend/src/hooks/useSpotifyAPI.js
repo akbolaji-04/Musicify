@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import axios from 'axios';
 import { getToken, refreshToken } from '../utils/token';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL 
 
 /**
  * Custom hook for making authenticated Spotify API requests
