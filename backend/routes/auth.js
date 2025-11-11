@@ -153,7 +153,12 @@ router.post('/refresh', async (req, res) => {
  * Clears refresh token cookie
  */
 router.post('/logout', (req, res) => {
-  res.clearCookie('refresh_token');
+  // FIX: You must pass the same options you used to SET the cookie
+  res.clearCookie('refresh_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'none',
+  });
   res.json({ message: 'Logged out successfully' });
 });
 
