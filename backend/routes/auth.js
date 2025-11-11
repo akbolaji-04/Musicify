@@ -48,7 +48,7 @@ router.get('/login', (req, res) => {
  */
 router.get('/callback', async (req, res) => {
   const { code, state, error } = req.query;
-  const frontendUrl = process.env.SPOTIFY_REDIRECT_URI?.split('/auth')[0] || 'http://localhost:5173';
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
   if (error) {
     return res.redirect(`${frontendUrl}/?error=${error}`);
