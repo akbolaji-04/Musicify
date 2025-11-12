@@ -64,7 +64,7 @@ export default function TrackCard({ track, showPlayButton = true }) {
               <button
                 onClick={handlePlay}
                 className="bg-spotify-green hover:bg-spotify-light text-white p-3 rounded-full transition-colors"
-                aria-label={isCurrentTrack && isPlaying ? 'Pause' : 'Play'}
+                aria-label={isCurrentTrack && isPlaying ? 'Pause' : 'Pause'}
               >
                 {isCurrentTrack && isPlaying ? (
                   <Pause className="w-5 h-5" />

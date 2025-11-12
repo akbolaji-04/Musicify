@@ -13,7 +13,8 @@ import { Music, Search as SearchIcon, Users, User, Moon, Sun, LogOut, Sparkles, 
 import { useState, useEffect } from 'react';
 
 function AppContent() {
-  const { isAuthenticated, user, logout } = useAuth();
+  // 1. ADD `isLoading`
+  const { isAuthenticated, user, logout, isLoading } = useAuth();
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
     return saved ? JSON.parse(saved) : true;
@@ -38,6 +39,21 @@ function AppContent() {
   const toggleTheme = () => {
     setDarkMode(!darkMode);
   };
+  
+  // 2. FIX LOGOUT GLITCH
+  const handleLogout = () => {
+    logout();
+    setIsMobileMenuOpen(false);
+  };
+
+  // 3. FIX SLOW LOGIN FLASH
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-spotify-green"></div>
+      </div>
+    );
+  }
 
   const navLinks = (
     <>
@@ -96,7 +112,7 @@ function AppContent() {
         {user?.display_name || 'Profile'}
       </Link>
       <button
-        onClick={logout}
+        onClick={handleLogout} // USE NEW LOGOUT HANDLER
         className="px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 w-full md:w-auto"
       >
         <LogOut className="w-4 h-4" />
