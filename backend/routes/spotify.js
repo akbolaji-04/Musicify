@@ -58,14 +58,15 @@ router.get('/recommendations', getAccessToken, async (req, res) => {
     const {
       seed_tracks,
       seed_artists,
+      seed_genres,
       target_energy,
       target_valence,
       target_danceability,
       limit = 20,
     } = req.query;
 
-    if (!seed_tracks && !seed_artists) {
-      return res.status(400).json({ error: 'At least one of seed_tracks or seed_artists is required' });
+    if (!seed_tracks && !seed_artists && !seed_genres) {
+      return res.status(400).json({ error: 'At least one of seed_tracks, seed_artists, or seed_genres is required' });
     }
 
     const options = {
@@ -77,6 +78,9 @@ router.get('/recommendations', getAccessToken, async (req, res) => {
     }
     if (seed_artists) {
       options.seed_artists = Array.isArray(seed_artists) ? seed_artists : [seed_artists];
+    }
+    if (seed_genres) {
+      options.seed_genres = Array.isArray(seed_genres) ? seed_genres : [seed_genres];
     }
     if (target_energy) {
       options.target_energy = parseFloat(target_energy);
