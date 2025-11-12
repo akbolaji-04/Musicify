@@ -20,9 +20,10 @@ export default function Profile() {
 
   const loadProfileData = async () => {
     try {
+      setLoading(true); // Add this
       const [tracks, artists] = await Promise.all([
-        getTopItems('tracks', timeRange, 50),
-        getTopItems('artists', timeRange, 50),
+        getTopItems('tracks', timeRange, 50), // This is where 50 comes from
+        getTopItems('artists', timeRange, 50), // This is the other 50
       ]);
 
       setTopTracks(tracks.items || []);
@@ -30,13 +31,10 @@ export default function Profile() {
 
       // Calculate stats
       const genreCount = {};
-      const artistCount = {};
-      
       artists.items?.forEach(artist => {
         artist.genres?.forEach(genre => {
           genreCount[genre] = (genreCount[genre] || 0) + 1;
         });
-        artistCount[artist.name] = (artistCount[artist.name] || 0) + 1;
       });
 
       const topGenres = Object.entries(genreCount)
@@ -44,14 +42,14 @@ export default function Profile() {
         .slice(0, 10)
         .map(([name, count]) => ({ name, count }));
 
-      const topArtistsData = Object.entries(artistCount)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
-        .map(([name, count]) => ({ name, count }));
+      const topArtistsData = artists.items
+        ?.slice(0, 10)
+        .map(artist => ({ name: artist.name, count: artist.popularity || 0 })); // Use popularity for the chart
 
       setStats({
         topGenres,
-        topArtists: topArtistsData,
+        topArtists: topArtistsData || [],
+        // FIX: Use the actual length from the API response
         totalTracks: tracks.items?.length || 0,
         totalArtists: artists.items?.length || 0,
       });

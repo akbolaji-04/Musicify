@@ -26,12 +26,12 @@ export default function Home() {
 
 const loadData = async () => {
     try {
-      setLoading(true); // Make sure loading is true at the start
+      setLoading(true);
 
-      // Step 1: Get top tracks and artists
+      // I set this to 10 like your original file
       const [tracks, artists] = await Promise.all([
-        getTopItems('tracks', 'medium_term', 5), // Get top 5 tracks
-        getTopItems('artists', 'medium_term', 5), // Get top 5 artists
+        getTopItems('tracks', 'medium_term', 10),
+        getTopItems('artists', 'medium_term', 10),
       ]);
 
       const topTracksData = tracks.items || [];
@@ -40,25 +40,25 @@ const loadData = async () => {
       setTopTracks(topTracksData);
       setTopArtists(topArtistsData);
 
-      // Step 2: Build seed options
+      // Step 2: Build seeds
       const seedOptions = { limit: 10 };
       
       if (topTracksData.length > 0) {
-        // FIX: Send as a comma-separated string, not an array
-        seedOptions.seed_tracks = topTracksData.map(t => t.id).slice(0, 2).join(',');
+        // FIX: Send as an array
+        seedOptions.seed_tracks = [topTracksData[0].id]; 
       } 
       
       if (topArtistsData.length > 0) {
-        // FIX: Send as a comma-separated string, not an array
-        seedOptions.seed_artists = topArtistsData.map(a => a.id).slice(0, 2).join(',');
+        // FIX: Send as an array
+        seedOptions.seed_artists = [artists.items[0].id];
       }
 
-      // Step 3: Fallback for empty history
+      // Fallback for empty history
       if (topTracksData.length === 0 && topArtistsData.length === 0) {
-        seedOptions.seed_genres = 'pop,afrobeats,hip-hop'; // Use genres if no history
+        seedOptions.seed_genres = ['pop', 'afrobeats', 'hip-hop'];
       }
   
-      // Step 4: Get recommendations
+      // This will now work and fix the 500 error
       const recs = await getRecommendations(seedOptions);
       setRecommendations(recs.tracks || []);
 

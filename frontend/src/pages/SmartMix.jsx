@@ -44,18 +44,21 @@ export default function SmartMix() {
 
     setLoading(true);
     try {
-      const data = await getRecommendations({
-        seed_tracks: [seedTrack.id],
+      const options = {
+        // FIX: Send as an array
+        seed_tracks: [seedTrack.id], 
         target_energy: mood.energy,
         target_valence: mood.valence,
         target_danceability: mood.danceability,
         limit: 20,
-      });
+      };
+
+      const data = await getRecommendations(options);
       setRecommendations(data.tracks || []);
       toast.success('Mix generated!');
     } catch (error) {
       console.error('Recommendations error:', error);
-      toast.error('Failed to generate mix');
+      toast.error('Failed to generate mix'); // This is the error you saw
     } finally {
       setLoading(false);
     }
