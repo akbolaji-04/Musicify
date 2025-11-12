@@ -68,3 +68,5 @@ Example:
 feat(frontend): add search page with debounced input and pagination
 ```
 
+
+

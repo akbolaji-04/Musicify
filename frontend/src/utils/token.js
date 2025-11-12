@@ -61,7 +61,11 @@ export function clearToken() {
  */
 export async function refreshToken() {
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/refresh`, {
+    const base =
+      import.meta.env.VITE_API_BASE_URL ||
+      (typeof window !== 'undefined' && window.__API_BASE__) ||
+      (import.meta.env.PROD ? 'https://musicify-backend.onrender.com' : 'http://localhost:5000');
+    const response = await fetch(`${base}/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
     });

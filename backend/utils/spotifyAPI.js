@@ -136,3 +136,4 @@ export async function getArtist(accessToken, artistId) {
   return spotifyRequest(accessToken, `/artists/${artistId}`);
 }
 
+

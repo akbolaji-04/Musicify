@@ -64,6 +64,10 @@ router.get('/recommendations', getAccessToken, async (req, res) => {
       limit = 20,
     } = req.query;
 
+    if (!seed_tracks && !seed_artists) {
+      return res.status(400).json({ error: 'At least one of seed_tracks or seed_artists is required' });
+    }
+
     const options = {
       limit: parseInt(limit),
     };
@@ -188,4 +192,5 @@ router.get('/lyrics', getAccessToken, async (req, res) => {
 });
 
 export default router;
+
 
