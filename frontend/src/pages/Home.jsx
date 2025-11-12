@@ -25,43 +25,49 @@ export default function Home() {
   }, [isAuthenticated]);
 
 const loadData = async () => {
-  try {
-    // Step 1: Get top tracks and artists first
-    const [tracks, artists] = await Promise.all([
-      getTopItems('tracks', 'medium_term', 10),
-      getTopItems('artists', 'medium_term', 5),
-    ]);
+    try {
+      setLoading(true); // Make sure loading is true at the start
 
-    const topTracksData = tracks.items || [];
-    const topArtistsData = artists.items || [];
+      // Step 1: Get top tracks and artists
+      const [tracks, artists] = await Promise.all([
+        getTopItems('tracks', 'medium_term', 5), // Get top 5 tracks
+        getTopItems('artists', 'medium_term', 5), // Get top 5 artists
+      ]);
 
-    setTopTracks(topTracksData);
-    setTopArtists(topArtistsData);
+      const topTracksData = tracks.items || [];
+      const topArtistsData = artists.items || [];
 
-    // Step 2: Build seeds from the results
-    const seedOptions = { limit: 10 };
+      setTopTracks(topTracksData);
+      setTopArtists(topArtistsData);
 
-    // Use the ID of your top track as a seed
-    if (topTracksData.length > 0) {
-      seedOptions.seed_tracks = topTracksData[0].id;
-    } 
-    // Also use the ID of your top artist as a seed
-    else if (topArtistsData.length > 0) {
-      seedOptions.seed_artists = topArtistsData[0].id;
-    }
+      // Step 2: Build seed options
+      const seedOptions = { limit: 10 };
+      
+      if (topTracksData.length > 0) {
+        // FIX: Send as a comma-separated string, not an array
+        seedOptions.seed_tracks = topTracksData.map(t => t.id).slice(0, 2).join(',');
+      } 
+      
+      if (topArtistsData.length > 0) {
+        // FIX: Send as a comma-separated string, not an array
+        seedOptions.seed_artists = topArtistsData.map(a => a.id).slice(0, 2).join(',');
+      }
 
-    // Step 3: Get recommendations ONLY if we have a seed
-    if (seedOptions.seed_tracks || seedOptions.seed_artists) {
+      // Step 3: Fallback for empty history
+      if (topTracksData.length === 0 && topArtistsData.length === 0) {
+        seedOptions.seed_genres = 'pop,afrobeats,hip-hop'; // Use genres if no history
+      }
+  
+      // Step 4: Get recommendations
       const recs = await getRecommendations(seedOptions);
       setRecommendations(recs.tracks || []);
-    }
 
-  } catch (error) {
-    console.error('Failed to load data:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+    } catch (error) {
+      console.error('Failed to load data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isAuthenticated) {
     return (

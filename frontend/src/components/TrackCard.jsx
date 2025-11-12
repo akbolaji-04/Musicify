@@ -1,19 +1,18 @@
 import { motion } from 'framer-motion';
 import { usePlayer } from '../contexts/PlayerContext';
 import { Play, Pause, Plus } from 'lucide-react';
-import { useSpotifyAPI } from '../hooks/useSpotifyAPI'; // 1. IMPORT
-import toast from 'react-hot-toast'; // 2. IMPORT
+import { useSpotifyAPI } from '../hooks/useSpotifyAPI'; // 1. IMPORT THE API HOOK
+import toast from 'react-hot-toast'; // 2. IMPORT TOAST FOR ERRORS
 
 export default function TrackCard({ track, showPlayButton = true }) {
   const { playTrack, currentTrack, isPlaying, addToQueue } = usePlayer();
   const { getTrack } = useSpotifyAPI(); // 3. USE THE HOOK
   const isCurrentTrack = currentTrack?.id === track.id;
 
-  // 4. CONVERT handlePlay TO AN ASYNC FUNCTION
+  // 4. MAKE THE FUNCTION ASYNC
   const handlePlay = async (e) => {
     e.stopPropagation();
     if (isCurrentTrack && isPlaying) {
-      // Already playing, do nothing or pause
       return;
     }
     
@@ -25,7 +24,7 @@ export default function TrackCard({ track, showPlayButton = true }) {
         toast.error('Preview not available for this track');
         return;
       }
-      // 6. PLAY THE FRESH TRACK
+      // 6. PLAY THE FRESH, VALID TRACK
       playTrack(freshTrack);
 
     } catch (error) {
