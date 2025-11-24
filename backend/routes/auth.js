@@ -136,17 +136,7 @@ router.post('/refresh', async (req, res) => {
       }
     );
 
-    const { access_token, expires_in, refresh_token: new_refresh_token } = tokenResponse.data;
-
-    // Rotation: if Spotify returns a new refresh token, update cookie
-    if (new_refresh_token) {
-      res.cookie('refresh_token', new_refresh_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none',
-        maxAge: 60 * 60 * 24 * 365 * 1000,
-      });
-    }
+    const { access_token, expires_in } = tokenResponse.data;
 
     res.json({
       access_token,

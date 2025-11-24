@@ -33,11 +33,6 @@ export function initializeSocket(httpServer) {
      * Join a room
      */
     socket.on('join_room', ({ roomId, username }) => {
-      if (!roomId) {
-        console.warn(`Join attempt without roomId by ${socket.id}`);
-        socket.emit('error', { message: 'roomId is required' });
-        return;
-      }
       socket.join(roomId);
 
       // Initialize room if it doesn't exist

@@ -21,11 +21,9 @@ export async function spotifyRequest(accessToken, endpoint, params = {}) {
     return response.data;
   } catch (error) {
     if (error.response) {
-      const status = error.response.status;
-      const spotifyError = error.response.data?.error;
-      const details = typeof spotifyError === 'string' ? spotifyError : spotifyError?.message || 'Unknown error';
-      // Surface more helpful context
-      throw new Error(`Spotify API error: ${status} - ${details}`);
+      throw new Error(
+        `Spotify API error: ${error.response.status} - ${error.response.data?.error?.message || 'Unknown error'}`
+      );
     }
     throw new Error(`Network error: ${error.message}`);
   }
@@ -65,7 +63,6 @@ export async function getRecommendations(accessToken, options = {}) {
   const {
     seed_tracks = [],
     seed_artists = [],
-    seed_genres = [],
     target_energy,
     target_valence,
     target_danceability,
@@ -81,9 +78,6 @@ export async function getRecommendations(accessToken, options = {}) {
   }
   if (seed_artists.length > 0) {
     params.seed_artists = seed_artists.slice(0, 5).join(',');
-  }
-  if (seed_genres.length > 0) {
-    params.seed_genres = seed_genres.slice(0, 5).join(',');
   }
   if (target_energy !== undefined) {
     params.target_energy = target_energy;
