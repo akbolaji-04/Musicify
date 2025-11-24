@@ -170,5 +170,3 @@ Capture these key screens:
 
 Good luck with your demo! 🎉
 
-
-

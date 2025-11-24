@@ -8,16 +8,7 @@ import { Server } from 'socket.io';
 export function initializeSocket(httpServer) {
   const io = new Server(httpServer, {
     cors: {
-      origin: (origin, callback) => {
-        const allowed = process.env.FRONTEND_URL
-          ? process.env.FRONTEND_URL.split(',').map(s => s.trim())
-          : ['http://localhost:5173'];
-        if (!origin || allowed.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(null, true);
-        }
-      },
+      origin: process.env.FRONTEND_URL || 'http://localhost:5173',
       methods: ['GET', 'POST'],
       credentials: true,
     },

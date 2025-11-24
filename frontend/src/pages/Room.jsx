@@ -25,14 +25,8 @@ export default function Room() {
 
   useEffect(() => {
     // Initialize socket connection
-    const baseUrl =
-      import.meta.env.VITE_API_BASE_URL ||
-      (typeof window !== 'undefined' && window.__API_BASE__) ||
-      (import.meta.env.PROD ? 'https://musicify-backend.onrender.com' : 'http://localhost:5000');
-    const socket = io(baseUrl, {
-      transports: ['websocket', 'polling'],
-      path: '/socket.io',
-      withCredentials: true,
+    const socket = io(import.meta.env.VITE_API_BASE_URL, {
+      transports: ['websocket'],
     });
 
     socketRef.current = socket;

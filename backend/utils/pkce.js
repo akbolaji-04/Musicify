@@ -30,4 +30,3 @@ export function generatePKCEPair() {
   return { verifier, challenge };
 }
 
-

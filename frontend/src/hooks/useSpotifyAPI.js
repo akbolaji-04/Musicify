@@ -2,10 +2,7 @@ import { useCallback } from 'react';
 import axios from 'axios';
 import { getToken, refreshToken } from '../utils/token';
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ||
-  (typeof window !== 'undefined' && window.__API_BASE__) ||
-  (import.meta.env.PROD ? 'https://musicify-backend.onrender.com' : 'http://localhost:5000');
+const API_BASE = import.meta.env.VITE_API_BASE_URL 
 
 /**
  * Custom hook for making authenticated Spotify API requests
@@ -36,7 +33,6 @@ export function useSpotifyAPI() {
           'Authorization': `Bearer ${token}`,
           ...options.headers,
         },
-        withCredentials: true,
         ...options,
       });
 
@@ -52,7 +48,6 @@ export function useSpotifyAPI() {
               'Authorization': `Bearer ${token}`,
               ...options.headers,
             },
-            withCredentials: true,
             ...options,
           });
           return retryResponse.data;

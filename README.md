@@ -131,5 +131,3 @@ Contributions are welcome! Please read our contributing guidelines first.
 
 Built with ❤️ using React, Node.js, and Spotify Web API
 
-
-

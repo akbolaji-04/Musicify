@@ -21,16 +21,7 @@ const io = initializeSocket(httpServer);
 
 // Middleware
 app.use(cors({
-  origin: (origin, callback) => {
-    const allowed = process.env.FRONTEND_URL
-      ? process.env.FRONTEND_URL.split(',').map(s => s.trim())
-      : ['http://localhost:5173'];
-    if (!origin || allowed.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(null, true); // allow temporarily to avoid CORS in prod across subdomains
-    }
-  },
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
 }));
 app.use(express.json());
